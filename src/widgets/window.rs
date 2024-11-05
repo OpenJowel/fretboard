@@ -35,6 +35,9 @@ use std::cell::RefCell;
 use std::fs::File;
 use std::path::PathBuf;
 
+#[path="../midi_player.rs"]
+mod midi_player;
+
 const EMPTY_CHORD: [Option<usize>; 6] = [None; 6];
 const INITIAL_CHORD_NAME: &str = "C";
 const INITIAL_CHORD: [Option<usize>; 6] = [None, Some(3), Some(2), Some(0), Some(1), Some(0)]; // C
@@ -96,6 +99,7 @@ mod imp {
         pub handedness: RefCell<String>,
 
         pub settings: OnceCell<gio::Settings>,
+        pub midi_player: OnceCell<midi_player::MidiPlayer>
     }
 
     #[glib::object_subclass]
@@ -194,6 +198,17 @@ impl FretboardWindow {
             .expect("`settings` has not been set");
     }
 
+    fn setup_midi_player(&self) {
+        self.imp().midi_player.set(midi_player::MidiPlayer::new().expect("Could not create MIDI player"))
+        .unwrap_or_else(|_| {
+            println!("midi_player was already initialized");
+        });
+
+        if let Some(player) = self.imp().midi_player.get(){
+            player.play_notes(&[0, 4, 7]);
+        }
+    }
+
     fn settings(&self) -> &gio::Settings {
         self.imp()
             .settings
@@ -243,6 +258,8 @@ impl FretboardWindow {
         self.settings()
             .bind("handedness", self, "handedness")
             .build();
+
+        self.setup_midi_player();
 
         let chord_diagram = imp.chord_diagram.get();
 
