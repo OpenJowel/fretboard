@@ -203,10 +203,6 @@ impl FretboardWindow {
         .unwrap_or_else(|_| {
             println!("midi_player was already initialized");
         });
-
-        if let Some(player) = self.imp().midi_player.get(){
-            player.play_notes(vec![0, 4, 7]);
-        }
     }
 
     fn settings(&self) -> &gio::Settings {
@@ -492,6 +488,20 @@ impl FretboardWindow {
         let query_chord = imp.chord_diagram.imp().chord.get();
 
         let name_opt = imp.database.borrow().name_from_chord(query_chord);
+
+        let open_string_offsets = vec![0, 5, 10, 15, 19, 24]; // TODO : Hardcode this somewhere else
+        let mut resulting_notes: Vec<i32> = Vec::new();
+
+        for (&open_string_offset, fret_id_opt) in open_string_offsets.iter().zip(query_chord.iter()) {
+            if let Some(fret_id) = fret_id_opt {
+                let resulting_note = open_string_offset as i32 + *fret_id as i32;
+                resulting_notes.push(resulting_note);
+            }
+        }
+
+        if let Some(player) = self.imp().midi_player.get(){
+            player.play_notes(resulting_notes);
+        }
 
         let name =
             name_opt.unwrap_or_else(|| calculate_chord_name(query_chord).unwrap_or_default());

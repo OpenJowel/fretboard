@@ -7,7 +7,7 @@ use std::error::Error;
 pub struct MidiPlayer {
   connection: Option<Arc<Mutex<MidiOutputConnection>>>,
   instrument: u8,
-  fundamental: u8
+  lowest_open_note: u8
 }
 
 impl MidiPlayer{
@@ -21,8 +21,8 @@ impl MidiPlayer{
 
     Ok(Self {
       connection,
-      instrument:27, // Electric guitar
-      fundamental: 40 // E1 (Lowest guitar string in standard tuning)
+      instrument: 27, // Electric guitar
+      lowest_open_note: 40 // E1 (Lowest guitar string in standard tuning)
     })
   }
 
@@ -32,21 +32,21 @@ impl MidiPlayer{
 
       let connection = Arc::clone(connection);
       let instrument = self.instrument;
-      let fundamental = self.fundamental;
+      let lowest_open_note = self.lowest_open_note;
 
       thread::spawn(move || {
         if let Ok(mut conn) = connection.lock(){
           conn.send(&[0xC0, instrument]).ok(); // Select instrument
 
           for note in &notes {
-            conn.send(&[0x90, fundamental + *note as u8, 127]).ok(); // Note On
+            conn.send(&[0x90, lowest_open_note + *note as u8, 127]).ok(); // Note On
             thread::sleep(time::Duration::from_millis(120));
           }
 
           thread::sleep(time::Duration::from_millis(200));
 
           for note in &notes {
-            conn.send(&[0x80, fundamental + *note as u8, 0]).ok(); // Note Off
+            conn.send(&[0x80, lowest_open_note + *note as u8, 0]).ok(); // Note Off
           }
         }
       });
