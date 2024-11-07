@@ -205,7 +205,7 @@ impl FretboardWindow {
         });
 
         if let Some(player) = self.imp().midi_player.get(){
-            player.play_notes(&[0, 4, 7]);
+            player.play_notes(vec![0, 4, 7]);
         }
     }
 
