@@ -1,17 +1,53 @@
 use midir::{MidiOutput, MidiOutputConnection};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
+use std::collections::HashMap;
+use once_cell::sync::Lazy;
 use std::error::Error;
+
+#[repr(u8)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub enum GuitarSound {
+  AcousticNylon = 24,
+  AcousticSteel = 25,
+  ElectricJazz = 26,
+  ElectricClean = 27,
+  ElectricMuted = 28,
+  Overdriven = 29,
+  Distortion = 30,
+  Harmonics = 31,
+}
+
+
+pub static GUITAR_SOUNDS: Lazy<HashMap<GuitarSound, &'static str>> = Lazy::new(|| {
+  let mut map = HashMap::new();
+  map.insert(GuitarSound::AcousticNylon, "Acoustic Nylon");
+  map.insert(GuitarSound::AcousticSteel, "Acoustic Steel");
+  map.insert(GuitarSound::ElectricJazz, "Electric Jazz");
+  map.insert(GuitarSound::ElectricClean, "Electric Clean");
+  map.insert(GuitarSound::ElectricMuted, "Electric Muted");
+  map.insert(GuitarSound::Overdriven, "Overdriven");
+  map.insert(GuitarSound::Distortion, "Distortion");
+  map.insert(GuitarSound::Harmonics, "Harmonics");
+  map
+});
+
+
+impl GuitarSound {
+  pub fn available_guitar_sounds() -> &'static HashMap<GuitarSound, &'static str> {
+    &GUITAR_SOUNDS
+  }
+}
 
 
 pub struct MidiPlayer {
   connection: Option<Arc<Mutex<MidiOutputConnection>>>,
-  instrument: u8,
+  guitar_sound: GuitarSound,
   lowest_open_note: u8
 }
 
-impl MidiPlayer{
 
+impl MidiPlayer{
   pub fn new() -> Result<Self, Box<dyn Error>> {
     let midi_out = MidiOutput::new("MIDI Output")?;
 
@@ -21,9 +57,19 @@ impl MidiPlayer{
 
     Ok(Self {
       connection,
-      instrument: 27, // Electric guitar
+      guitar_sound: GuitarSound::AcousticNylon,
       lowest_open_note: 40 // E1 (Lowest guitar string in standard tuning)
     })
+  }
+
+
+  pub fn get_guitar_sound(&self) -> &GuitarSound {
+    return &self.guitar_sound;
+  }
+
+
+  pub fn set_guitar_sound(&mut self, guitar_sound: GuitarSound) {
+    self.guitar_sound = guitar_sound;
   }
 
 
@@ -31,12 +77,12 @@ impl MidiPlayer{
     if let Some(connection) = &self.connection {
 
       let connection = Arc::clone(connection);
-      let instrument = self.instrument;
+      let instrument = self.guitar_sound;
       let lowest_open_note = self.lowest_open_note;
 
       thread::spawn(move || {
         if let Ok(mut conn) = connection.lock(){
-          conn.send(&[0xC0, instrument]).ok(); // Select instrument
+          conn.send(&[0xC0, instrument as u8]).ok(); // Select instrument
 
           for note in &notes {
             conn.send(&[0x90, lowest_open_note + *note as u8, 127]).ok(); // Note On

@@ -29,11 +29,13 @@ use gettextrs::gettext;
 use glib::closure_local;
 use gtk::{gio, glib};
 use i18n_format::i18n_fmt;
+use midi_player::GuitarSound;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::fs::File;
 use std::path::PathBuf;
+use std::sync::{Mutex};
 
 #[path="../midi_player.rs"]
 mod midi_player;
@@ -99,7 +101,7 @@ mod imp {
         pub handedness: RefCell<String>,
 
         pub settings: OnceCell<gio::Settings>,
-        pub midi_player: OnceCell<midi_player::MidiPlayer>
+        pub midi_player: OnceCell<Mutex<midi_player::MidiPlayer>>
     }
 
     #[glib::object_subclass]
@@ -199,10 +201,36 @@ impl FretboardWindow {
     }
 
     fn setup_midi_player(&self) {
-        self.imp().midi_player.set(midi_player::MidiPlayer::new().expect("Could not create MIDI player"))
-        .unwrap_or_else(|_| {
-            println!("midi_player was already initialized");
+        let midi_player = self.imp()
+        .midi_player
+        .get_or_init(|| {
+            Mutex::new(midi_player::MidiPlayer::new().expect("Could not create MIDI player"))
         });
+        // Just testing some methods : TODO remove
+
+        /*
+        println!("Available guitar sounds:");
+        for (sound, label) in GuitarSound::available_guitar_sounds() {
+            println!("- {}", label);
+        }
+        */
+
+        /*
+        if let Ok(mut player) = midi_player.lock() {
+            player.set_guitar_sound(GuitarSound::AcousticNylon);
+        }
+        */
+
+        /*
+        if let Ok(player) = midi_player.lock() {
+            let guitar_sound_label = GuitarSound::available_guitar_sounds()
+                .get(player.get_guitar_sound());
+
+            if let Some(label) = guitar_sound_label {
+                println!("Current guitar sound : '{}'", label);
+            }
+        }
+        */
     }
 
     fn settings(&self) -> &gio::Settings {
@@ -499,8 +527,12 @@ impl FretboardWindow {
             }
         }
 
-        if let Some(player) = self.imp().midi_player.get(){
-            player.play_notes(resulting_notes);
+        if let Some(midi_player) = self.imp().midi_player.get() {
+            if let Ok(player) = midi_player.lock() {
+                player.play_notes(resulting_notes);
+            } else {
+                println!("Failed to lock the MIDI player mutex");
+            }
         }
 
         let name =
