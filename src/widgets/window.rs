@@ -29,7 +29,7 @@ use gettextrs::gettext;
 use glib::closure_local;
 use gtk::{gio, glib};
 use i18n_format::i18n_fmt;
-use midi_player::GuitarSound;
+use midi_player::GuitarType;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -51,7 +51,7 @@ pub struct Bookmark {
 }
 
 #[derive(Debug, Clone, Copy, Default)]
-pub enum GuitarType {
+pub enum GuitarHandedness {
     #[default]
     RightHanded,
     LeftHanded,
@@ -209,25 +209,24 @@ impl FretboardWindow {
         // Just testing some methods : TODO remove
 
         /*
-        println!("Available guitar sounds:");
-        for (sound, label) in GuitarSound::available_guitar_sounds() {
+        println!("Available guitar types:");
+        for (guitar_type, label) in GuitarType::available_guitar_types() {
             println!("- {}", label);
         }
         */
-
         /*
         if let Ok(mut player) = midi_player.lock() {
-            player.set_guitar_sound(GuitarSound::AcousticNylon);
+            player.set_guitar_type(GuitarType::AcousticNylon);
         }
         */
 
         /*
         if let Ok(player) = midi_player.lock() {
-            let guitar_sound_label = GuitarSound::available_guitar_sounds()
-                .get(player.get_guitar_sound());
+            let guitar_type_label = GuitarType::available_guitar_types()
+                .get(player.get_guitar_type());
 
-            if let Some(label) = guitar_sound_label {
-                println!("Current guitar sound : '{}'", label);
+            if let Some(label) = guitar_type_label {
+                println!("Current guitar type : '{}'", label);
             }
         }
         */
@@ -272,9 +271,9 @@ impl FretboardWindow {
             let imp = win.imp();
 
             imp.chord_diagram
-                .set_guitar_type(match imp.handedness.borrow().as_str() {
-                    "right-handed" => GuitarType::RightHanded,
-                    "left-handed" => GuitarType::LeftHanded,
+                .set_guitar_handedness(match imp.handedness.borrow().as_str() {
+                    "right-handed" => GuitarHandedness::RightHanded,
+                    "left-handed" => GuitarHandedness::LeftHanded,
                     other => panic!("unexpected handedness string: {other}"),
                 });
         });
@@ -610,7 +609,7 @@ impl FretboardWindow {
         for variant in variants {
             let preview = FretboardChordPreview::with_chord(
                 variant,
-                imp.chord_diagram.imp().guitar_type.get(),
+                imp.chord_diagram.imp().guitar_handedness.get(),
             );
             let buffer = imp.entry.serialized_buffer_text();
             preview.imp().chord_name.replace(buffer);
@@ -683,7 +682,7 @@ impl FretboardWindow {
         for bookmark in bookmarks.iter().rev() {
             let preview = FretboardChordPreview::with_chord(
                 bookmark.chord,
-                imp.chord_diagram.imp().guitar_type.get(),
+                imp.chord_diagram.imp().guitar_handedness.get(),
             );
             preview.imp().chord_name.replace(bookmark.name.clone());
 

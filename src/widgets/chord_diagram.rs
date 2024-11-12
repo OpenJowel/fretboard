@@ -1,6 +1,6 @@
 use crate::chord_ops::*;
 use crate::widgets::chord_diagram_top_toggle::TopToggleState;
-use crate::widgets::window::GuitarType;
+use crate::widgets::window::GuitarHandedness;
 use crate::widgets::{
     FretboardBarreSpin, FretboardChordDiagramToggle, FretboardChordDiagramTopToggle,
 };
@@ -50,7 +50,7 @@ mod imp {
         pub barre_spin: TemplateChild<FretboardBarreSpin>,
 
         pub chord: Cell<[Option<usize>; 6]>,
-        pub guitar_type: Cell<GuitarType>,
+        pub guitar_handedness: Cell<GuitarHandedness>,
 
         #[property(get, set)]
         pub neck_position: Cell<u8>,
@@ -236,9 +236,9 @@ impl FretboardChordDiagram {
         let mut chord: [Option<usize>; 6] = [None; 6];
 
         // accomodate left/right-handedness
-        let string_range: Vec<usize> = match imp.guitar_type.get() {
-            GuitarType::RightHanded => (0..STRINGS).collect(),
-            GuitarType::LeftHanded => (0..STRINGS).rev().collect(),
+        let string_range: Vec<usize> = match imp.guitar_handedness.get() {
+            GuitarHandedness::RightHanded => (0..STRINGS).collect(),
+            GuitarHandedness::LeftHanded => (0..STRINGS).rev().collect(),
         };
 
         for i in 0..STRINGS {
@@ -310,9 +310,9 @@ impl FretboardChordDiagram {
         let top_toggles = imp.top_toggles.borrow();
         let toggles = imp.toggles.borrow();
 
-        let string_range: Vec<usize> = match imp.guitar_type.get() {
-            GuitarType::RightHanded => (0..STRINGS).collect(),
-            GuitarType::LeftHanded => (0..STRINGS).rev().collect(),
+        let string_range: Vec<usize> = match imp.guitar_handedness.get() {
+            GuitarHandedness::RightHanded => (0..STRINGS).collect(),
+            GuitarHandedness::LeftHanded => (0..STRINGS).rev().collect(),
         };
 
         for i in 0..STRINGS {
@@ -400,14 +400,14 @@ impl FretboardChordDiagram {
         )));
     }
 
-    pub fn set_guitar_type(&self, guitar_type: GuitarType) {
+    pub fn set_guitar_handedness(&self, guitar_handedness: GuitarHandedness) {
         let imp = self.imp();
-        imp.guitar_type.replace(guitar_type);
+        imp.guitar_handedness.replace(guitar_handedness);
         self.update_visuals();
 
-        let barre_alignment = match guitar_type {
-            GuitarType::RightHanded => gtk::Align::End,
-            GuitarType::LeftHanded => gtk::Align::Start,
+        let barre_alignment = match guitar_handedness {
+            GuitarHandedness::RightHanded => gtk::Align::End,
+            GuitarHandedness::LeftHanded => gtk::Align::Start,
         };
 
         for barre_picture in [

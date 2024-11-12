@@ -1,5 +1,5 @@
 use crate::chord_ops::*;
-use crate::widgets::window::GuitarType;
+use crate::widgets::window::GuitarHandedness;
 use adw::subclass::prelude::*;
 use gtk::glib;
 use gtk::prelude::*;
@@ -145,13 +145,13 @@ impl Default for FretboardChordPreview {
 }
 
 impl FretboardChordPreview {
-    pub fn with_chord(chord: [Option<usize>; 6], guitar_type: GuitarType) -> Self {
+    pub fn with_chord(chord: [Option<usize>; 6], guitar_handedness: GuitarHandedness) -> Self {
         let preview = Self::default();
-        preview.set_chord(chord, guitar_type);
+        preview.set_chord(chord, guitar_handedness);
         preview
     }
 
-    pub fn set_chord(&self, chord: [Option<usize>; 6], guitar_type: GuitarType) {
+    pub fn set_chord(&self, chord: [Option<usize>; 6], guitar_handedness: GuitarHandedness) {
         let imp = self.imp();
         imp.chord.set(chord);
 
@@ -161,9 +161,9 @@ impl FretboardChordPreview {
 
         let adjusted_chord = adjust_chord(chord, neck_position);
 
-        let string_range = match guitar_type {
-            GuitarType::RightHanded => (0..STRINGS).collect::<Vec<_>>().into_iter(),
-            GuitarType::LeftHanded => (0..STRINGS).rev().collect::<Vec<_>>().into_iter(),
+        let string_range = match guitar_handedness {
+            GuitarHandedness::RightHanded => (0..STRINGS).collect::<Vec<_>>().into_iter(),
+            GuitarHandedness::LeftHanded => (0..STRINGS).rev().collect::<Vec<_>>().into_iter(),
         };
 
         for (value, n) in adjusted_chord.iter().zip(string_range) {
@@ -194,9 +194,9 @@ impl FretboardChordPreview {
                 .set_label(&neck_position.to_string());
         }
 
-        let barre_alignment = match guitar_type {
-            GuitarType::RightHanded => gtk::Align::End,
-            GuitarType::LeftHanded => gtk::Align::Start,
+        let barre_alignment = match guitar_handedness {
+            GuitarHandedness::RightHanded => gtk::Align::End,
+            GuitarHandedness::LeftHanded => gtk::Align::Start,
         };
 
         for barre_picture in [
