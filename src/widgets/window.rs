@@ -72,6 +72,8 @@ mod imp {
         #[template_child]
         pub chord_diagram: TemplateChild<FretboardChordDiagram>,
         #[template_child]
+        pub play_chord_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub entry: TemplateChild<FretboardChordNameEntry>,
         #[template_child]
         pub feedback_stack: TemplateChild<gtk::Stack>,
@@ -355,6 +357,17 @@ impl FretboardWindow {
         self.refresh_bookmarks_button();
 
         self.load_stored_chord();
+
+        let play_chord_button = imp.play_chord_button.get();
+        play_chord_button.set_sensitive(true);
+
+        let win = self.clone();
+
+        play_chord_button.connect_clicked(move |_| {
+            win.play_current_strings();
+        });
+
+
     }
 
     fn focus_entry(&self) {
@@ -509,12 +522,11 @@ impl FretboardWindow {
         self.refresh_star_toggle();
     }
 
-    fn load_name_from_chord(&self) {
+
+    fn play_current_strings(&self)
+    {
         let imp = self.imp();
-
         let query_chord = imp.chord_diagram.imp().chord.get();
-
-        let name_opt = imp.database.borrow().name_from_chord(query_chord);
 
         let open_string_offsets = vec![0, 5, 10, 15, 19, 24]; // TODO : Hardcode this somewhere else
         let mut resulting_notes: Vec<i32> = Vec::new();
@@ -533,6 +545,15 @@ impl FretboardWindow {
                 println!("Failed to lock the MIDI player mutex");
             }
         }
+    }
+
+
+    fn load_name_from_chord(&self) {
+        let imp = self.imp();
+
+        let query_chord = imp.chord_diagram.imp().chord.get();
+
+        let name_opt = imp.database.borrow().name_from_chord(query_chord);
 
         let name =
             name_opt.unwrap_or_else(|| calculate_chord_name(query_chord).unwrap_or_default());

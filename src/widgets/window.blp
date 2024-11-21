@@ -59,6 +59,18 @@ template $FretboardWindow : Adw.ApplicationWindow {
               }
             }
 
+
+            Button play_chord_button {
+              action-name: "win.play-chord";
+              label: _("Play Chord");
+              icon-name: "audio-speakers-symbolic";
+              halign: center;
+              margin-top: 15;
+              width-request: 60;
+              height-request: 40;
+            }
+
+
             Stack feedback_stack {
               transition-type: crossfade;
               transition-duration: 150;
