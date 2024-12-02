@@ -172,7 +172,7 @@
       <description translate="no">
         <p>This release of Fretboard makes it more accessible:</p>
         <ul>
-          <li>Support for both left-handed and right-handed guitar types</li>
+          <li>Support for both left-handed and right-handed guitar handedness</li>
           <li>Independence from text direction for the chord diagram, fixing the mirroring issue it had with right-to-left languages</li>
           <li>Turkish, Spanish, Norwegian, Portugese and Brazillian Portugese translations, making Fretboard available in a total of 9 languages</li>
         </ul>

@@ -150,7 +150,7 @@ msgid "Bookmarks"
 msgstr ""
 
 #: data/gtk/window.blp:240
-msgid "Guitar Type"
+msgid "Guitare Handedness"
 msgstr ""
 
 #: data/gtk/window.blp:243
